@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WAREHOUSE OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & Variables ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–bg:        #080c10;
+–surface:   #0d1117;
+–panel:     #111820;
+–border:    #1e2d3d;
+–border2:   #243040;
+–amber:     #f5a623;
+–amber-dim: #b87a1a;
+–amber-glow:#f5a62322;
+–green:     #22c55e;
+–green-dim: #166534;
+–red:       #ef4444;
+–red-dim:   #7f1d1d;
+–blue:      #38bdf8;
+–text:      #cdd6e0;
+–text-dim:  #5c7a96;
+–text-muted:#3a5068;
+–mono:      ‘Space Mono’, monospace;
+–sans:      ‘Barlow’, sans-serif;
+–cond:      ‘Barlow Condensed’, sans-serif;
+}
+
+html, body { height: 100%; background: var(–bg); color: var(–text); font-family: var(–sans); overflow: hidden; }
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(–border2); border-radius: 2px; }
+
+/* ── Layout ────────────────────────────────────────────────── */
+.app { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 48px 1fr; height: 100vh; }
+
+/* ── Top Bar ───────────────────────────────────────────────── */
+.topbar {
+grid-column: 1 / -1;
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 0;
+padding: 0;
+position: relative;
+z-index: 10;
+}
+.topbar-brand {
+width: 220px;
+display: flex; align-items: center; gap: 10px;
+padding: 0 20px;
+border-right: 1px solid var(–border);
+height: 100%;
+flex-shrink: 0;
+}
+.brand-icon {
+width: 22px; height: 22px;
+display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+}
+.brand-icon span {
+background: var(–amber);
+display: block;
+border-radius: 1px;
+}
+.brand-icon span:nth-child(2) { background: var(–amber-dim); }
+.brand-icon span:nth-child(3) { background: var(–amber-dim); }
+.brand-text {
+font-family: var(–cond);
+font-weight: 700;
+font-size: 14px;
+letter-spacing: 3px;
+color: var(–amber);
+text-transform: uppercase;
+}
+.topbar-right {
+flex: 1;
+display: flex; align-items: center; justify-content: space-between;
+padding: 0 24px;
+}
+.topbar-clock {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–text-dim);
+letter-spacing: 1px;
+}
+.topbar-warehouse {
+font-family: var(–cond);
+font-size: 13px;
+letter-spacing: 2px;
+color: var(–text-dim);
+text-transform: uppercase;
+}
+.live-badge {
+display: flex; align-items: center; gap: 6px;
+font-family: var(–mono);
+font-size: 10px;
+color: var(–green);
+letter-spacing: 1px;
+}
+.live-dot {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(–green);
+animation: pulse-green 2s infinite;
+}
+@keyframes pulse-green {
+0%, 100% { opacity: 1; box-shadow: 0 0 0 0 #22c55e44; }
+50% { opacity: 0.7; box-shadow: 0 0 0 4px transparent; }
+}
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+.sidebar {
+background: var(–surface);
+border-right: 1px solid var(–border);
+display: flex; flex-direction: column;
+padding: 16px 0;
+overflow-y: auto;
+}
+.nav-section-label {
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–text-muted);
+text-transform: uppercase;
+padding: 12px 20px 6px;
+}
+.nav-item {
+display: flex; align-items: center; gap: 10px;
+padding: 9px 20px;
+cursor: pointer;
+font-family: var(–cond);
+font-size: 14px;
+letter-spacing: 1px;
+color: var(–text-dim);
+transition: all 0.15s;
+border-left: 2px solid transparent;
+position: relative;
+}
+.nav-item:hover { color: var(–text); background: var(–panel); }
+.nav-item.active {
+color: var(–amber);
+border-left-color: var(–amber);
+background: var(–amber-glow);
+}
+.nav-icon { width: 14px; text-align: center; font-size: 13px; }
+.nav-badge {
+margin-left: auto;
+background: var(–border);
+color: var(–text-dim);
+font-family: var(–mono);
+font-size: 9px;
+padding: 1px 6px;
+border-radius: 10px;
+}
+.nav-item.active .nav-badge { background: var(–amber-glow); color: var(–amber); }
+.sidebar-footer {
+margin-top: auto;
+padding: 16px 20px;
+border-top: 1px solid var(–border);
+font-family: var(–mono);
+font-size: 9px;
+color: var(–text-muted);
+letter-spacing: 1px;
+line-height: 1.8;
+}
+
+/* ── Main ──────────────────────────────────────────────────── */
+.main {
+overflow-y: auto;
+background: var(–bg);
+}
+.view { display: none; padding: 28px; animation: fadeIn 0.2s ease; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ── Page Header ───────────────────────────────────────────── */
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+.page-title {
+font-family: var(–cond);
+font-size: 22px;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–text);
+}
+.page-title span { color: var(–amber); }
+.page-sub {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–text-muted);
+letter-spacing: 1px;
+margin-top: 4px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn {
+font-family: var(–cond);
+font-size: 12px;
+font-weight: 600;
+letter-spacing: 2px;
+text-transform: uppercase;
+padding: 8px 16px;
+border: 1px solid;
+cursor: pointer;
+border-radius: 2px;
+transition: all 0.15s;
+white-space: nowrap;
+}
+.btn-primary {
+background: var(–amber);
+border-color: var(–amber);
+color: #000;
+}
+.btn-primary:hover { background: #fbbf24; }
+.btn-ghost {
+background: transparent;
+border-color: var(–border2);
+color: var(–text-dim);
+}
+.btn-ghost:hover { border-color: var(–amber); color: var(–amber); }
+.btn-danger { background: transparent; border-color: var(–red); color: var(–red); }
+.btn-danger:hover { background: var(–red); color: #fff; }
+.btn-green { background: var(–green); border-color: var(–green); color: #000; }
+.btn-green:hover { background: #4ade80; }
+.btn-sm { padding: 5px 10px; font-size: 10px; letter-spacing: 1px; }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── Dashboard Grid ────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+background: var(–surface);
+border: 1px solid var(–border);
+padding: 20px;
+position: relative;
+overflow: hidden;
+}
+.stat-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+}
+.stat-card.amber::before { background: var(–amber); }
+.stat-card.green::before { background: var(–green); }
+.stat-card.red::before { background: var(–red); }
+.stat-card.blue::before { background: var(–blue); }
+.stat-label {
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–text-muted);
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+.stat-value {
+font-family: var(–mono);
+font-size: 36px;
+font-weight: 700;
+line-height: 1;
+}
+.stat-card.amber .stat-value { color: var(–amber); }
+.stat-card.green .stat-value { color: var(–green); }
+.stat-card.red .stat-value { color: var(–red); }
+.stat-card.blue .stat-value { color: var(–blue); }
+.stat-desc {
+font-size: 11px;
+color: var(–text-muted);
+margin-top: 6px;
+font-family: var(–sans);
+}
+
+/* ── Panels ────────────────────────────────────────────────── */
+.panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.panel {
+background: var(–surface);
+border: 1px solid var(–border);
+}
+.panel-full { grid-column: 1 / -1; }
+.panel-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 14px 18px;
+border-bottom: 1px solid var(–border);
+}
+.panel-title {
+font-family: var(–cond);
+font-size: 12px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text-dim);
+}
+.panel-body { padding: 0; }
+
+/* ── Table ─────────────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text-muted);
+padding: 10px 18px;
+text-align: left;
+border-bottom: 1px solid var(–border);
+background: var(–panel);
+}
+.data-table td {
+padding: 11px 18px;
+font-size: 13px;
+border-bottom: 1px solid var(–border);
+vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(–panel); }
+.data-table .mono { font-family: var(–mono); font-size: 11px; }
+
+/* ── Status Pills ──────────────────────────────────────────── */
+.pill {
+display: inline-flex; align-items: center; gap: 5px;
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 1px;
+text-transform: uppercase;
+padding: 3px 8px;
+border-radius: 2px;
+white-space: nowrap;
+}
+.pill::before { content: ‘’; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.pill-green { background: #052e16; color: var(–green); border: 1px solid #166534; }
+.pill-green::before { background: var(–green); }
+.pill-amber { background: #431407; color: var(–amber); border: 1px solid var(–amber-dim); }
+.pill-amber::before { background: var(–amber); }
+.pill-red { background: #450a0a; color: var(–red); border: 1px solid #7f1d1d; }
+.pill-red::before { background: var(–red); }
+.pill-blue { background: #082f49; color: var(–blue); border: 1px solid #0369a1; }
+.pill-blue::before { background: var(–blue); }
+.pill-muted { background: var(–panel); color: var(–text-muted); border: 1px solid var(–border); }
+.pill-muted::before { background: var(–text-muted); }
+
+/* ── Priority Indicators ───────────────────────────────────── */
+.priority-high { color: var(–red); font-weight: 600; }
+.priority-medium { color: var(–amber); }
+.priority-low { color: var(–text-dim); }
+
+/* ── Forms ─────────────────────────────────────────────────── */
+.modal-overlay {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.8);
+z-index: 100;
+align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+background: var(–surface);
+border: 1px solid var(–border2);
+width: 440px;
+max-height: 85vh;
+overflow-y: auto;
+animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 16px 20px;
+border-bottom: 1px solid var(–border);
+}
+.modal-title {
+font-family: var(–cond);
+font-size: 14px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–amber);
+}
+.modal-close {
+background: none; border: none;
+color: var(–text-muted); cursor: pointer;
+font-size: 18px; line-height: 1;
+padding: 0 4px;
+}
+.modal-close:hover { color: var(–text); }
+.modal-body { padding: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-label {
+display: block;
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text-muted);
+margin-bottom: 6px;
+}
+.form-input, .form-select {
+width: 100%;
+background: var(–panel);
+border: 1px solid var(–border2);
+color: var(–text);
+font-family: var(–sans);
+font-size: 13px;
+padding: 9px 12px;
+outline: none;
+transition: border-color 0.15s;
+appearance: none;
+border-radius: 0;
+}
+.form-input:focus, .form-select:focus { border-color: var(–amber); }
+.form-select { background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath fill=’%235c7a96’ d=‘M6 8L0 0h12z’/%3E%3C/svg%3E”); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.error-msg { font-family: var(–mono); font-size: 10px; color: var(–red); margin-top: 12px; padding: 8px 12px; background: #450a0a; border: 1px solid #7f1d1d; }
+
+/* ── Bottleneck Bar ────────────────────────────────────────── */
+.bottleneck-list { padding: 12px 18px; }
+.bottleneck-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.bottleneck-zone { font-family: var(–cond); font-size: 13px; color: var(–text); min-width: 80px; }
+.bottleneck-bar-wrap { flex: 1; height: 4px; background: var(–border); border-radius: 2px; overflow: hidden; }
+.bottleneck-bar { height: 100%; background: var(–amber); border-radius: 2px; transition: width 0.5s ease; }
+.bottleneck-count { font-family: var(–mono); font-size: 11px; color: var(–amber); min-width: 20px; text-align: right; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.empty {
+padding: 40px 20px;
+text-align: center;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–text-muted);
+letter-spacing: 1px;
+}
+
+/* ── Task Actions ──────────────────────────────────────────── */
+.action-row { display: flex; gap: 6px; }
+
+/* ── Notification ──────────────────────────────────────────── */
+.toast {
+position: fixed; bottom: 24px; right: 24px;
+background: var(–surface);
+border: 1px solid var(–border2);
+border-left: 3px solid var(–green);
+padding: 12px 18px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–text);
+z-index: 999;
+display: none;
+animation: slideLeft 0.3s ease;
+max-width: 320px;
+}
+.toast.error { border-left-color: var(–red); }
+.toast.show { display: block; }
+@keyframes slideLeft { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1100px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 800px) { .panel-grid { grid-template-columns: 1fr; } }
+</style>
+
+</head>
+<body>
+
+<!-- ── Toast ──────────────────────────────────────────── -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ── App ────────────────────────────────────────────── -->
+
+<div class="app">
+
+  <!-- Topbar -->
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="brand-text">WMOS</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-warehouse" id="warehouseLabel">— SELECT WAREHOUSE —</div>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <div class="topbar-clock" id="clock">00:00:00</div>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+
+  <nav class="sidebar">
+    <div class="nav-section-label">Monitor</div>
+    <div class="nav-item active" onclick="nav('dashboard')">
+      <span class="nav-icon">⬡</span> Dashboard
+    </div>
+    <div class="nav-section-label">Manage</div>
+    <div class="nav-item" onclick="nav('workers')">
+      <span class="nav-icon">◈</span> Workers
+      <span class="nav-badge" id="badge-workers">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('zones')">
+      <span class="nav-icon">◫</span> Zones
+      <span class="nav-badge" id="badge-zones">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('tasks')">
+      <span class="nav-icon">◷</span> Tasks
+      <span class="nav-badge" id="badge-tasks">0</span>
+    </div>
+    <div class="nav-section-label">Reports</div>
+    <div class="nav-item" onclick="nav('shifts')">
+      <span class="nav-icon">◑</span> Shifts
+    </div>
+    <div class="nav-section-label">Setup</div>
+    <div class="nav-item" onclick="nav('warehouses')">
+      <span class="nav-icon">◰</span> Warehouses
+    </div>
+    <div class="sidebar-footer">
+      WMOS v1.0<br>
+      STATIC BUILD<br>
+      GITHUB PAGES
+    </div>
+  </nav>
+
+  <!-- Main -->
+
+  <main class="main">
+
+```
+<!-- ── Dashboard ─────────────────────── -->
+<div class="view active" id="view-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">FLOOR <span>OVERVIEW</span></div>
+      <div class="page-sub">REAL-TIME WAREHOUSE STATUS</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="renderDashboard()">↻ REFRESH</button>
+  </div>
+  <div class="stat-grid" id="dash-stats"></div>
+  <div class="panel-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">ZONE BOTTLENECKS</div>
+      </div>
+      <div class="panel-body">
+        <div class="bottleneck-list" id="dash-bottlenecks"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">IN-PROGRESS TASKS</div>
+      </div>
+      <div class="panel-body">
+        <table class="data-table" id="dash-active-tasks">
+          <thead><tr><th>TASK</th><th>WORKER</th><th>ZONE</th><th>PRIORITY</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel panel-full">
+      <div class="panel-header">
+        <div class="panel-title">WORKER STATUS</div>
+      </div>
+      <div class="panel-body">
+        <table class="data-table" id="dash-workers-table">
+          <thead><tr><th>NAME</th><th>ROLE</th><th>STATUS</th><th>CURRENT TASK</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Workers ────────────────────────── -->
+<div class="view" id="view-workers">
+  <div class="page-header">
+    <div>
+      <div class="page-title">WORKER <span>ROSTER</span></div>
+      <div class="page-sub">MANAGE WAREHOUSE PERSONNEL</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-worker')">+ ADD WORKER</button>
+  </div>
+  <div class="panel">
+    <div class="panel-body">
+      <table class="data-table" id="workers-table">
+        <thead><tr><th>ID</th><th>NAME</th><th>ROLE</th><th>WAREHOUSE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Zones ──────────────────────────── -->
+<div class="view" id="view-zones">
+  <div class="page-header">
+    <div>
+      <div class="page-title">FLOOR <span>ZONES</span></div>
+      <div class="page-sub">MANAGE WAREHOUSE ZONES</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-zone')">+ ADD ZONE</button>
+  </div>
+  <div class="panel">
+    <div class="panel-body">
+      <table class="data-table" id="zones-table">
+        <thead><tr><th>ID</th><th>NAME</th><th>WAREHOUSE</th><th>ACTIVE TASKS</th><th>CREATED</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tasks ──────────────────────────── -->
+<div class="view" id="view-tasks">
+  <div class="page-header">
+    <div>
+      <div class="page-title">TASK <span>BOARD</span></div>
+      <div class="page-sub">FULL TASK LIFECYCLE MANAGEMENT</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-task')">+ CREATE TASK</button>
+  </div>
+  <div class="panel">
+    <div class="panel-body">
+      <table class="data-table" id="tasks-table">
+        <thead><tr><th>ID</th><th>TITLE</th><th>ZONE</th><th>PRIORITY</th><th>STATUS</th><th>ASSIGNED TO</th><th>ACTIONS</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Shifts ─────────────────────────── -->
+<div class="view" id="view-shifts">
+  <div class="page-header">
+    <div>
+      <div class="page-title">SHIFT <span>REPORTS</span></div>
+      <div class="page-sub">END-OF-SHIFT PERFORMANCE SUMMARIES</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-shift')">+ ADD SHIFT</button>
+  </div>
+  <div id="shifts-list"></div>
+</div>
+
+<!-- ── Warehouses ─────────────────────── -->
+<div class="view" id="view-warehouses">
+  <div class="page-header">
+    <div>
+      <div class="page-title">WAREHOUSE <span>SETUP</span></div>
+      <div class="page-sub">CONFIGURE FACILITIES</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-warehouse')">+ ADD WAREHOUSE</button>
+  </div>
+  <div class="panel">
+    <div class="panel-body">
+      <table class="data-table" id="warehouses-table">
+        <thead><tr><th>ID</th><th>NAME</th><th>LOCATION</th><th>WORKERS</th><th>ZONES</th><th>ACTIONS</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+```
+
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════ MODALS ═══ -->
+
+<!-- Warehouse -->
+
+<div class="modal-overlay" id="modal-warehouse">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">NEW WAREHOUSE</div>
+      <button class="modal-close" onclick="closeModal('modal-warehouse')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="wh-name" placeholder="San Antonio FC1"></div>
+      <div class="form-group"><label class="form-label">LOCATION</label><input class="form-input" id="wh-location" placeholder="1250 Port San Antonio Blvd"></div>
+      <div id="wh-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-warehouse')">CANCEL</button>
+        <button class="btn btn-primary" onclick="createWarehouse()">CREATE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Worker -->
+
+<div class="modal-overlay" id="modal-worker">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">ADD WORKER</div>
+      <button class="modal-close" onclick="closeModal('modal-worker')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="w-name" placeholder="Marcus Webb"></div>
+      <div class="form-group"><label class="form-label">WAREHOUSE</label><select class="form-select" id="w-wh"></select></div>
+      <div class="form-group"><label class="form-label">ROLE</label>
+        <select class="form-select" id="w-role">
+          <option value="picker">Picker</option>
+          <option value="packer">Packer</option>
+          <option value="loader">Loader</option>
+          <option value="manager">Manager</option>
+        </select>
+      </div>
+      <div id="w-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-worker')">CANCEL</button>
+        <button class="btn btn-primary" onclick="createWorker()">ADD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zone -->
+
+<div class="modal-overlay" id="modal-zone">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">ADD ZONE</div>
+      <button class="modal-close" onclick="closeModal('modal-zone')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">ZONE NAME</label><input class="form-input" id="z-name" placeholder="Zone A, Dock 1..."></div>
+      <div class="form-group"><label class="form-label">WAREHOUSE</label><select class="form-select" id="z-wh"></select></div>
+      <div id="z-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-zone')">CANCEL</button>
+        <button class="btn btn-primary" onclick="createZone()">CREATE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task -->
+
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">CREATE TASK</div>
+      <button class="modal-close" onclick="closeModal('modal-task')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">TITLE</label><input class="form-input" id="t-title" placeholder="Pick Order #1234"></div>
+      <div class="form-group"><label class="form-label">DESCRIPTION</label><input class="form-input" id="t-desc" placeholder="Optional notes"></div>
+      <div class="form-group"><label class="form-label">WAREHOUSE</label><select class="form-select" id="t-wh" onchange="filterZonesByWH()"></select></div>
+      <div class="form-group"><label class="form-label">ZONE</label><select class="form-select" id="t-zone"></select></div>
+      <div class="form-group"><label class="form-label">PRIORITY</label>
+        <select class="form-select" id="t-priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <div id="t-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-task')">CANCEL</button>
+        <button class="btn btn-primary" onclick="createTask()">CREATE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Worker -->
+
+<div class="modal-overlay" id="modal-assign">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">ASSIGN WORKER</div>
+      <button class="modal-close" onclick="closeModal('modal-assign')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assign-task-id" />
+      <div class="form-group"><label class="form-label">SELECT WORKER</label><select class="form-select" id="assign-worker"></select></div>
+      <div id="assign-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-assign')">CANCEL</button>
+        <button class="btn btn-primary" onclick="assignWorker()">ASSIGN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shift -->
+
+<div class="modal-overlay" id="modal-shift">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">CREATE SHIFT</div>
+      <button class="modal-close" onclick="closeModal('modal-shift')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">WAREHOUSE</label><select class="form-select" id="sh-wh"></select></div>
+      <div class="form-group"><label class="form-label">START TIME</label><input class="form-input" id="sh-start" type="datetime-local"></div>
+      <div class="form-group"><label class="form-label">END TIME</label><input class="form-input" id="sh-end" type="datetime-local"></div>
+      <div id="sh-error" class="error-msg" style="display:none"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal('modal-shift')">CANCEL</button>
+        <button class="btn btn-primary" onclick="createShift()">CREATE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ LOGIC ═════ -->
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let DB = {
+  warehouses: [],
+  workers: [],
+  zones: [],
+  tasks: [],
+  task_assignments: [],
+  task_logs: [],
+  shifts: [],
+  shift_workers: [],
+  _id: { wh: 1, w: 1, z: 1, t: 1, ta: 1, tl: 1, sh: 1, sw: 1 },
+};
+
+let activeWarehouseId = null;
+
+// ── Seed Data ───────────────────────────────────────────────────────────────
+function seed() {
+  const now = new Date();
+
+  // Warehouses
+  const wh1 = addWarehouse({ name: 'San Antonio FC1', location: '1250 Port San Antonio Blvd' });
+  const wh2 = addWarehouse({ name: 'Austin FC2', location: '800 Expo Center Dr' });
+  activeWarehouseId = wh1.id;
+
+  // Zones
+  const zA   = addZone({ warehouse_id: wh1.id, name: 'Zone A — Inbound' });
+  const zB   = addZone({ warehouse_id: wh1.id, name: 'Zone B — Pick Floor' });
+  const zDock= addZone({ warehouse_id: wh1.id, name: 'Dock 1' });
+  const zAus = addZone({ warehouse_id: wh2.id, name: 'Zone A' });
+
+  // Workers
+  const w1 = addWorker({ warehouse_id: wh1.id, name: 'Marcus Webb',    role: 'picker',  status: 'active' });
+  const w2 = addWorker({ warehouse_id: wh1.id, name: 'Tanisha Cole',   role: 'packer',  status: 'active' });
+  const w3 = addWorker({ warehouse_id: wh1.id, name: 'Devonte Reyes',  role: 'loader',  status: 'active' });
+  const w4 = addWorker({ warehouse_id: wh1.id, name: 'Priya Nair',     role: 'manager', status: 'active' });
+  const w5 = addWorker({ warehouse_id: wh1.id, name: 'Jaylen Brooks',  role: 'picker',  status: 'active' });
+  const w6 = addWorker({ warehouse_id: wh1.id, name: 'Sandra Liu',     role: 'packer',  status: 'inactive' });
+
+  // Tasks
+  const t1 = addTask({ warehouse_id: wh1.id, zone_id: zB.id,    title: 'Pick Order #1034', priority: 'high',   status: 'not_started' });
+  const t2 = addTask({ warehouse_id: wh1.id, zone_id: zB.id,    title: 'Pick Order #1035', priority: 'high',   status: 'not_started' });
+  const t3 = addTask({ warehouse_id: wh1.id, zone_id: zA.id,    title: 'Receive Pallet B12',priority:'medium', status: 'not_started' });
+  const t4 = addTask({ warehouse_id: wh1.id, zone_id: zDock.id, title: 'Load Truck #7',    priority: 'high',   status: 'not_started' });
+  const t5 = addTask({ warehouse_id: wh1.id, zone_id: zB.id,    title: 'Audit Bin 44C',    priority: 'low',    status: 'not_started' });
+
+  // Assign + start t1 for w1 and t3 for w3
+  addAssignment({ task_id: t1.id, worker_id: w1.id });
+  addAssignment({ task_id: t3.id, worker_id: w3.id });
+  addAssignment({ task_id: t4.id, worker_id: w2.id });
+
+  startTask(t1.id, w1.id, new Date(Date.now() - 8 * 60 * 1000));
+  startTask(t3.id, w3.id, new Date(Date.now() - 3 * 60 * 1000));
+
+  // Completed task (for shift report)
+  const t6 = addTask({ warehouse_id: wh1.id, zone_id: zA.id, title: 'Stock Return RMA-99', priority: 'low', status: 'not_started' });
+  addAssignment({ task_id: t6.id, worker_id: w5.id });
+  startTask(t6.id, w5.id, new Date(Date.now() - 30 * 60 * 1000));
+  endTask(t6.id, w5.id, new Date(Date.now() - 24 * 60 * 1000));
+
+  // Shift
+  const sh = addShift({ warehouse_id: wh1.id, start_time: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0), end_time: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0) });
+  addShiftWorker(sh.id, w1.id);
+  addShiftWorker(sh.id, w2.id);
+  addShiftWorker(sh.id, w3.id);
+  addShiftWorker(sh.id, w5.id);
+}
+
+// ── Core Data Functions ─────────────────────────────────────────────────────
+function addWarehouse(d) {
+  const r = { id: DB._id.wh++, name: d.name, location: d.location, created_at: new Date() };
+  DB.warehouses.push(r); return r;
+}
+function addWorker(d) {
+  const r = { id: DB._id.w++, warehouse_id: d.warehouse_id, name: d.name, role: d.role, status: d.status || 'active', created_at: new Date() };
+  DB.workers.push(r); return r;
+}
+function addZone(d) {
+  const r = { id: DB._id.z++, warehouse_id: d.warehouse_id, name: d.name, created_at: new Date() };
+  DB.zones.push(r); return r;
+}
+function addTask(d) {
+  const r = { id: DB._id.t++, warehouse_id: d.warehouse_id, zone_id: d.zone_id, title: d.title, description: d.description||'', priority: d.priority||'medium', status: d.status||'not_started', created_at: new Date() };
+  DB.tasks.push(r); return r;
+}
+function addAssignment(d) {
+  const r = { id: DB._id.ta++, task_id: d.task_id, worker_id: d.worker_id, assigned_at: new Date() };
+  DB.task_assignments.push(r); return r;
+}
+function addShift(d) {
+  const r = { id: DB._id.sh++, warehouse_id: d.warehouse_id, start_time: d.start_time, end_time: d.end_time, created_at: new Date() };
+  DB.shifts.push(r); return r;
+}
+function addShiftWorker(shift_id, worker_id) {
+  DB.shift_workers.push({ id: DB._id.sw++, shift_id, worker_id });
+}
+
+// ── Business Logic ──────────────────────────────────────────────────────────
+function workerHasActiveTask(worker_id) {
+  return DB.task_logs.some(l => l.worker_id === worker_id && !l.end_time);
+}
+
+function startTask(task_id, worker_id, _startTime) {
+  const task = DB.tasks.find(t => t.id === task_id);
+  if (!task) return { error: 'Task not found' };
+  if (task.status === 'completed') return { error: 'Task already completed' };
+  if (workerHasActiveTask(worker_id)) return { error: `Worker already has an active task in progress` };
+  const assigned = DB.task_assignments.some(a => a.task_id === task_id && a.worker_id === worker_id);
+  if (!assigned) return { error: 'Worker is not assigned to this task. Assign first.' };
+
+  task.status = 'in_progress';
+  const log = { id: DB._id.tl++, task_id, worker_id, start_time: _startTime || new Date(), end_time: null, duration_seconds: null };
+  DB.task_logs.push(log);
+  return { log };
+}
+
+function endTask(task_id, worker_id, _endTime) {
+  const task = DB.tasks.find(t => t.id === task_id);
+  if (!task) return { error: 'Task not found' };
+  if (task.status !== 'in_progress') return { error: 'Task is not in progress' };
+  const log = DB.task_logs.find(l => l.task_id === task_id && l.worker_id === worker_id && !l.end_time);
+  if (!log) return { error: 'No active log found for this worker on this task' };
+
+  const end = _endTime || new Date();
+  log.end_time = end;
+  log.duration_seconds = Math.round((end - log.start_time) / 1000);
+  task.status = 'completed';
+  return { log };
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+const getWH   = id => DB.warehouses.find(w => w.id === id);
+const getZone = id => DB.zones.find(z => z.id === id);
+const getWorker = id => DB.workers.find(w => w.id === id);
+const getTask = id => DB.tasks.find(t => t.id === id);
+
+function fmt(n, unit) { return `${n} ${unit}${n!==1?'s':''}`; }
+function fmtDur(sec) {
+  if (!sec) return '—';
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) return `${Math.floor(sec/60)}m ${sec%60}s`;
+  return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`;
+}
+function fmtDT(d) {
+  if (!d) return '—';
+  return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function priorityPill(p) {
+  if (p === 'high')   return `<span class="pill pill-red">HIGH</span>`;
+  if (p === 'medium') return `<span class="pill pill-amber">MED</span>`;
+  return `<span class="pill pill-muted">LOW</span>`;
+}
+function statusPill(s) {
+  if (s === 'active')       return `<span class="pill pill-green">ACTIVE</span>`;
+  if (s === 'inactive')     return `<span class="pill pill-muted">INACTIVE</span>`;
+  if (s === 'in_progress')  return `<span class="pill pill-amber">IN PROGRESS</span>`;
+  if (s === 'completed')    return `<span class="pill pill-green">COMPLETED</span>`;
+  if (s === 'not_started')  return `<span class="pill pill-muted">NOT STARTED</span>`;
+  return `<span class="pill pill-muted">${s}</span>`;
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function nav(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  const renders = { dashboard: renderDashboard, workers: renderWorkers, zones: renderZones, tasks: renderTasks, shifts: renderShifts, warehouses: renderWarehouses };
+  if (renders[view]) renders[view]();
+  updateBadges();
+}
+
+function updateBadges() {
+  document.getElementById('badge-workers').textContent = DB.workers.filter(w => w.status === 'active').length;
+  document.getElementById('badge-zones').textContent   = DB.zones.length;
+  document.getElementById('badge-tasks').textContent   = DB.tasks.filter(t => t.status !== 'completed').length;
+}
+
+// ── Clock ────────────────────────────────────────────────────────────────────
+function tickClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-US', { hour12: false });
+}
+setInterval(tickClock, 1000); tickClock();
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isErr ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  populateSelects();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+}
+
+// ── Populate Selects ─────────────────────────────────────────────────────────
+function populateSelects() {
+  const whOpts = DB.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+  ['w-wh','z-wh','t-wh','sh-wh'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = whOpts || '<option value="">— No Warehouses —</option>'; });
+  filterZonesByWH();
+  const activeWorkers = DB.workers.filter(w => w.status === 'active');
+  const wOpts = activeWorkers.map(w => `<option value="${w.id}">${w.name} (${w.role})</option>`).join('');
+  const aw = document.getElementById('assign-worker');
+  if (aw) aw.innerHTML = wOpts || '<option value="">— No Active Workers —</option>';
+}
+
+function filterZonesByWH() {
+  const whSel = document.getElementById('t-wh');
+  const zSel  = document.getElementById('t-zone');
+  if (!whSel || !zSel) return;
+  const whId = parseInt(whSel.value);
+  const zones = DB.zones.filter(z => z.warehouse_id === whId);
+  zSel.innerHTML = zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('') || '<option value="">— No Zones —</option>';
+}
+
+// ── CRUD Actions ─────────────────────────────────────────────────────────────
+function createWarehouse() {
+  const name = document.getElementById('wh-name').value.trim();
+  const loc  = document.getElementById('wh-location').value.trim();
+  if (!name || !loc) return showError('wh-error', 'Name and location are required.');
+  const wh = addWarehouse({ name, location: loc });
+  if (!activeWarehouseId) activeWarehouseId = wh.id;
+  closeModal('modal-warehouse');
+  document.getElementById('wh-name').value = '';
+  document.getElementById('wh-location').value = '';
+  renderWarehouses(); updateBadges();
+  toast(`Warehouse "${name}" created`);
+  document.getElementById('warehouseLabel').textContent = DB.warehouses.find(w=>w.id===activeWarehouseId)?.name || '—';
+}
+
+function createWorker() {
+  const name  = document.getElementById('w-name').value.trim();
+  const whId  = parseInt(document.getElementById('w-wh').value);
+  const role  = document.getElementById('w-role').value;
+  if (!name) return showError('w-error', 'Name is required.');
+  if (!whId) return showError('w-error', 'Select a warehouse.');
+  addWorker({ warehouse_id: whId, name, role });
+  closeModal('modal-worker');
+  document.getElementById('w-name').value = '';
+  renderWorkers(); updateBadges();
+  toast(`Worker "${name}" added`);
+}
+
+function createZone() {
+  const name = document.getElementById('z-name').value.trim();
+  const whId = parseInt(document.getElementById('z-wh').value);
+  if (!name) return showError('z-error', 'Zone name is required.');
+  if (!whId) return showError('z-error', 'Select a warehouse.');
+  addZone({ warehouse_id: whId, name });
+  closeModal('modal-zone');
+  document.getElementById('z-name').value = '';
+  renderZones(); updateBadges();
+  toast(`Zone "${name}" created`);
+}
+
+function createTask() {
+  const title  = document.getElementById('t-title').value.trim();
+  const desc   = document.getElementById('t-desc').value.trim();
+  const whId   = parseInt(document.getElementById('t-wh').value);
+  const zoneId = parseInt(document.getElementById('t-zone').value);
+  const pri    = document.getElementById('t-priority').value;
+  if (!title) return showError('t-error', 'Title is required.');
+  if (!whId)  return showError('t-error', 'Select a warehouse.');
+  if (!zoneId)return showError('t-error', 'Select a zone.');
+  addTask({ warehouse_id: whId, zone_id: zoneId, title, description: desc, priority: pri });
+  closeModal('modal-task');
+  document.getElementById('t-title').value = '';
+  document.getElementById('t-desc').value = '';
+  renderTasks(); updateBadges();
+  toast(`Task "${title}" created`);
+}
+
+function openAssign(taskId) {
+  document.getElementById('assign-task-id').value = taskId;
+  const task = getTask(taskId);
+  const wh = task ? task.warehouse_id : null;
+  const workers = DB.workers.filter(w => w.status === 'active' && (!wh || w.warehouse_id === wh));
+  const el = document.getElementById('assign-worker');
+  el.innerHTML = workers.map(w => `<option value="${w.id}">${w.name} (${w.role})</option>`).join('') || '<option value="">— No Active Workers —</option>';
+  showError('assign-error', '');
+  openModal('modal-assign');
+}
+
+function assignWorker() {
+  const taskId   = parseInt(document.getElementById('assign-task-id').value);
+  const workerId = parseInt(document.getElementById('assign-worker').value);
+  if (!workerId) return showError('assign-error', 'Select a worker.');
+  const task = getTask(taskId);
+  if (!task) return showError('assign-error', 'Task not found.');
+  if (task.status === 'completed') return showError('assign-error', 'Cannot assign to a completed task.');
+  // Allow re-assign (just add another assignment row, keeps it flexible)
+  addAssignment({ task_id: taskId, worker_id: workerId });
+  const wName = getWorker(workerId)?.name;
+  closeModal('modal-assign');
+  renderTasks();
+  toast(`${wName} assigned to task`);
+}
+
+function doStartTask(taskId) {
+  const task = getTask(taskId);
+  if (!task) return;
+  const assignments = DB.task_assignments.filter(a => a.task_id === taskId);
+  if (!assignments.length) { toast('Assign a worker first', true); return; }
+  // Pick an assigned worker who isn't already active
+  let picked = null;
+  for (const a of assignments) {
+    if (!workerHasActiveTask(a.worker_id)) { picked = a.worker_id; break; }
+  }
+  if (!picked) { toast('All assigned workers already have active tasks', true); return; }
+  const result = startTask(taskId, picked);
+  if (result.error) { toast(result.error, true); return; }
+  toast(`Task started — ${getWorker(picked)?.name} is on it`);
+  renderTasks(); renderDashboard();
+}
+
+function doEndTask(taskId) {
+  const log = DB.task_logs.find(l => l.task_id === taskId && !l.end_time);
+  if (!log) { toast('No active log found', true); return; }
+  const result = endTask(taskId, log.worker_id);
+  if (result.error) { toast(result.error, true); return; }
+  toast(`Task completed in ${fmtDur(result.log.duration_seconds)}`);
+  renderTasks(); renderDashboard();
+}
+
+function toggleWorkerStatus(workerId) {
+  const w = getWorker(workerId);
+  if (!w) return;
+  w.status = w.status === 'active' ? 'inactive' : 'active';
+  renderWorkers(); updateBadges();
+  toast(`${w.name} marked ${w.status}`);
+}
+
+function setActive(whId) {
+  activeWarehouseId = whId;
+  const wh = getWH(whId);
+  document.getElementById('warehouseLabel').textContent = wh?.name || '—';
+  renderWarehouses();
+  toast(`Active warehouse: ${wh?.name}`);
+}
+
+function createShift() {
+  const whId  = parseInt(document.getElementById('sh-wh').value);
+  const start = document.getElementById('sh-start').value;
+  const end   = document.getElementById('sh-end').value;
+  if (!whId)  return showError('sh-error', 'Select a warehouse.');
+  if (!start) return showError('sh-error', 'Start time required.');
+  if (!end)   return showError('sh-error', 'End time required.');
+  if (new Date(start) >= new Date(end)) return showError('sh-error', 'End must be after start.');
+  addShift({ warehouse_id: whId, start_time: new Date(start), end_time: new Date(end) });
+  closeModal('modal-shift');
+  renderShifts();
+  toast('Shift created');
+}
+
+// ── Render: Dashboard ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const whId = activeWarehouseId;
+  const whWorkers = DB.workers.filter(w => w.warehouse_id === whId && w.status === 'active');
+  const workerIds = whWorkers.map(w => w.id);
+
+  const activeWorkerIds = new Set(
+    DB.task_logs.filter(l => workerIds.includes(l.worker_id) && !l.end_time).map(l => l.worker_id)
+  );
+  const active  = activeWorkerIds.size;
+  const idle    = whWorkers.length - active;
+  const inProg  = DB.tasks.filter(t => t.warehouse_id === whId && t.status === 'in_progress').length;
+  const pending = DB.tasks.filter(t => t.warehouse_id === whId && t.status === 'not_started').length;
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card green">
+      <div class="stat-label">ACTIVE WORKERS</div>
+      <div class="stat-value">${active}</div>
+      <div class="stat-desc">Currently on a task</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">IDLE WORKERS</div>
+      <div class="stat-value">${idle}</div>
+      <div class="stat-desc">Available for assignment</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">TASKS IN PROGRESS</div>
+      <div class="stat-value">${inProg}</div>
+      <div class="stat-desc">Floor activity</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">PENDING TASKS</div>
+      <div class="stat-value">${pending}</div>
+      <div class="stat-desc">Awaiting start</div>
+    </div>
+  `;
+
+  // Bottlenecks
+  const inProgTasks = DB.tasks.filter(t => t.warehouse_id === whId && t.status === 'in_progress');
+  const zoneCounts = {};
+  inProgTasks.forEach(t => { const z = getZone(t.zone_id); if(z) zoneCounts[z.name] = (zoneCounts[z.name]||0) + 1; });
+  const maxCount = Math.max(1, ...Object.values(zoneCounts));
+  const bnEl = document.getElementById('dash-bottlenecks');
+  if (!Object.keys(zoneCounts).length) {
+    bnEl.innerHTML = '<div class="empty">NO ACTIVE TASKS — FLOOR CLEAR</div>';
+  } else {
+    bnEl.innerHTML = Object.entries(zoneCounts)
+      .sort((a,b) => b[1]-a[1])
+      .map(([zone, cnt]) => `
+        <div class="bottleneck-row">
+          <div class="bottleneck-zone">${zone}</div>
+          <div class="bottleneck-bar-wrap"><div class="bottleneck-bar" style="width:${Math.round(cnt/maxCount*100)}%"></div></div>
+          <div class="bottleneck-count">${cnt}</div>
+        </div>
+      `).join('');
+  }
+
+  // Active tasks table
+  const tbody = document.querySelector('#dash-active-tasks tbody');
+  if (!inProgTasks.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">NO TASKS IN PROGRESS</td></tr>`;
+  } else {
+    tbody.innerHTML = inProgTasks.map(t => {
+      const log    = DB.task_logs.find(l => l.task_id === t.id && !l.end_time);
+      const worker = log ? getWorker(log.worker_id) : null;
+      const zone   = getZone(t.zone_id);
+      return `<tr>
+        <td>${t.title}</td>
+        <td>${worker ? worker.name : '—'}</td>
+        <td>${zone ? zone.name : '—'}</td>
+        <td>${priorityPill(t.priority)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Worker status table
+  const wtbody = document.querySelector('#dash-workers-table tbody');
+  const whWorkersAll = DB.workers.filter(w => w.warehouse_id === whId);
+  if (!whWorkersAll.length) {
+    wtbody.innerHTML = `<tr><td colspan="4" class="empty">NO WORKERS IN THIS WAREHOUSE</td></tr>`;
+  } else {
+    wtbody.innerHTML = whWorkersAll.map(w => {
+      const activeLog = DB.task_logs.find(l => l.worker_id === w.id && !l.end_time);
+      const currentTask = activeLog ? getTask(activeLog.task_id) : null;
+      return `<tr>
+        <td>${w.name}</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${w.role.toUpperCase()}</span></td>
+        <td>${statusPill(w.status)}</td>
+        <td>${currentTask ? currentTask.title : '<span style="color:var(--text-muted)">—</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// ── Render: Workers ───────────────────────────────────────────────────────────
+function renderWorkers() {
+  const tbody = document.querySelector('#workers-table tbody');
+  if (!DB.workers.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">NO WORKERS YET</td></tr>`; return; }
+  tbody.innerHTML = DB.workers.map(w => {
+    const wh = getWH(w.warehouse_id);
+    return `<tr>
+      <td class="mono">#${w.id}</td>
+      <td><strong>${w.name}</strong></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${w.role.toUpperCase()}</span></td>
+      <td>${wh ? wh.name : '—'}</td>
+      <td>${statusPill(w.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="toggleWorkerStatus(${w.id})">${w.status==='active'?'DEACTIVATE':'ACTIVATE'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render: Zones ─────────────────────────────────────────────────────────────
+function renderZones() {
+  const tbody = document.querySelector('#zones-table tbody');
+  if (!DB.zones.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">NO ZONES YET</td></tr>`; return; }
+  tbody.innerHTML = DB.zones.map(z => {
+    const wh = getWH(z.warehouse_id);
+    const activeTasks = DB.tasks.filter(t => t.zone_id === z.id && t.status === 'in_progress').length;
+    return `<tr>
+      <td class="mono">#${z.id}</td>
+      <td><strong>${z.name}</strong></td>
+      <td>${wh ? wh.name : '—'}</td>
+      <td>${activeTasks > 0 ? `<span class="pill pill-amber">${activeTasks} ACTIVE</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td class="mono" style="color:var(--text-muted);font-size:10px">${fmtDT(z.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render: Tasks ─────────────────────────────────────────────────────────────
+function renderTasks() {
+  const tbody = document.querySelector('#tasks-table tbody');
+  if (!DB.tasks.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty">NO TASKS YET</td></tr>`; return; }
+  tbody.innerHTML = DB.tasks.map(t => {
+    const zone     = getZone(t.zone_id);
+    const assignments = DB.task_assignments.filter(a => a.task_id === t.id);
+    const activeLog = DB.task_logs.find(l => l.task_id === t.id && !l.end_time);
+    const assignedWorker = activeLog ? getWorker(activeLog.worker_id) : (assignments.length ? getWorker(assignments[assignments.length-1].worker_id) : null);
+
+    let actions = '';
+    if (t.status === 'not_started') {
+      actions = `
+        <div class="action-row">
+          <button class="btn btn-ghost btn-sm" onclick="openAssign(${t.id})">ASSIGN</button>
+          <button class="btn btn-primary btn-sm" onclick="doStartTask(${t.id})" ${!assignments.length?'disabled':''}>START</button>
+        </div>`;
+    } else if (t.status === 'in_progress') {
+      actions = `<button class="btn btn-green btn-sm" onclick="doEndTask(${t.id})">END TASK</button>`;
+    } else {
+      const log = DB.task_logs.find(l => l.task_id === t.id && l.end_time);
+      actions = `<span style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">${log ? fmtDur(log.duration_seconds) : '—'}</span>`;
+    }
+
+    return `<tr>
+      <td class="mono">#${t.id}</td>
+      <td><strong>${t.title}</strong></td>
+      <td>${zone ? zone.name : '—'}</td>
+      <td>${priorityPill(t.priority)}</td>
+      <td>${statusPill(t.status)}</td>
+      <td>${assignedWorker ? assignedWorker.name : '<span style="color:var(--text-muted)">Unassigned</span>'}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render: Shifts ────────────────────────────────────────────────────────────
+function renderShifts() {
+  const container = document.getElementById('shifts-list');
+  if (!DB.shifts.length) { container.innerHTML = `<div class="panel"><div class="empty" style="padding:40px">NO SHIFTS YET — CREATE ONE ABOVE</div></div>`; return; }
+
+  container.innerHTML = DB.shifts.map(sh => {
+    const shiftWorkerIds = DB.shift_workers.filter(sw => sw.shift_id === sh.id).map(sw => sw.worker_id);
+    const logs = DB.task_logs.filter(l =>
+      shiftWorkerIds.includes(l.worker_id) &&
+      l.start_time >= sh.start_time &&
+      l.end_time && l.end_time <= sh.end_time
+    );
+    const durations = logs.map(l => l.duration_seconds).filter(Boolean);
+    const avgTime = durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : null;
+    const shiftSec = Math.round((sh.end_time - sh.start_time) / 1000);
+    const totalActive = durations.reduce((a,b)=>a+b,0);
+    const idleTime = Math.max(0, shiftSec * shiftWorkerIds.length - totalActive);
+
+    // Top workers
+    const workerStats = {};
+    logs.forEach(l => {
+      if (!workerStats[l.worker_id]) workerStats[l.worker_id] = { tasks: 0, dur: [] };
+      workerStats[l.worker_id].tasks++;
+      if (l.duration_seconds) workerStats[l.worker_id].dur.push(l.duration_seconds);
+    });
+    const topWorkers = Object.entries(workerStats)
+      .sort((a,b) => b[1].tasks - a[1].tasks)
+      .slice(0, 3)
+      .map(([wid, s]) => {
+        const w = getWorker(parseInt(wid));
+        const avg = s.dur.length ? Math.round(s.dur.reduce((a,b)=>a+b,0)/s.dur.length) : null;
+        return `<tr>
+          <td>${w ? w.name : '?'}</td>
+          <td class="mono" style="color:var(--green)">${s.tasks}</td>
+          <td class="mono" style="color:var(--text-dim)">${fmtDur(avg)}</td>
+        </tr>`;
+      }).join('');
+
+    const wh = getWH(sh.warehouse_id);
+    return `
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">SHIFT #${sh.id} — ${wh ? wh.name : '?'}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-top:4px">${fmtDT(sh.start_time)} → ${fmtDT(sh.end_time)}</div>
+        </div>
+        <span class="pill pill-blue">${shiftWorkerIds.length} WORKERS</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
+        <div style="padding:16px 20px;border-right:1px solid var(--border)">
+          <div class="stat-label">TASKS COMPLETED</div>
+          <div style="font-family:var(--mono);font-size:28px;color:var(--green)">${logs.length}</div>
+        </div>
+        <div style="padding:16px 20px;border-right:1px solid var(--border)">
+          <div class="stat-label">AVG TASK TIME</div>
+          <div style="font-family:var(--mono);font-size:28px;color:var(--blue)">${fmtDur(avgTime)}</div>
+        </div>
+        <div style="padding:16px 20px">
+          <div class="stat-label">IDLE TIME</div>
+          <div style="font-family:var(--mono);font-size:28px;color:var(--amber)">${fmtDur(idleTime)}</div>
+        </div>
+      </div>
+      ${topWorkers ? `
+      <div style="padding:14px 18px 0;border-bottom:1px solid var(--border)">
+        <div class="panel-title" style="margin-bottom:8px">TOP WORKERS</div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>NAME</th><th>TASKS</th><th>AVG TIME</th></tr></thead>
+        <tbody>${topWorkers}</tbody>
+      </table>` : '<div class="empty">NO COMPLETED TASKS RECORDED IN SHIFT WINDOW</div>'}
+    </div>`;
+  }).join('');
+}
+
+// ── Render: Warehouses ────────────────────────────────────────────────────────
+function renderWarehouses() {
+  const tbody = document.querySelector('#warehouses-table tbody');
+  if (!DB.warehouses.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">NO WAREHOUSES YET</td></tr>`; return; }
+  tbody.innerHTML = DB.warehouses.map(wh => {
+    const workers = DB.workers.filter(w => w.warehouse_id === wh.id).length;
+    const zones   = DB.zones.filter(z => z.warehouse_id === wh.id).length;
+    const isActive = activeWarehouseId === wh.id;
+    return `<tr>
+      <td class="mono">#${wh.id}</td>
+      <td><strong>${wh.name}</strong>${isActive ? ' <span class="pill pill-green" style="margin-left:8px">ACTIVE</span>' : ''}</td>
+      <td style="color:var(--text-dim)">${wh.location}</td>
+      <td class="mono">${workers}</td>
+      <td class="mono">${zones}</td>
+      <td>${!isActive ? `<button class="btn btn-ghost btn-sm" onclick="setActive(${wh.id})">SET ACTIVE</button>` : '<span style="color:var(--text-muted);font-family:var(--mono);font-size:10px">PRIMARY</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+seed();
+const activewh = DB.warehouses.find(w => w.id === activeWarehouseId);
+if (activewh) document.getElementById('warehouseLabel').textContent = activewh.name;
+renderDashboard();
+updateBadges();
+</script>
+
+</body>
+</html>
